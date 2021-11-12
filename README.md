@@ -1,6 +1,8 @@
 # Realself-Scraper
 Scraper to extract reviews from the website www.realself.com. Built as a contribution to a social media analysis medical study.
 
+Run start.bat for online functionality. It will open a local Selenium Grid to handle opening the browsers and also automatically run main.py. This isn't needed for offline functions such as parse_reviews.
+
 Isn't the most user friendly, you have to modify some of the .py files for full functionality:
 
 In main.py, **you need to change BASE_PATH** to the directory you are storing the code in. You can also comment / uncommment certain groups of functions to enable / disable certain functionality. I strongly recommend only running one set of functions at a time for simplicity. Change PROCEDURE to specify which procedure from www.realself.com you want to scrape.
