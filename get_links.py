@@ -4,14 +4,14 @@ from pathlib import Path
 import main
 from multiprocessing.dummy import Pool as ThreadPool
 
-HTML_THREAD_COUNT = 4
+HTML_THREAD_COUNT = 7
 
 def store_html(page_num, text, path):
     file = open((path / "link_pages") / (str(page_num) + ".txt"), "w", errors="ignore")
     file.write(text)
     file.close()
 
-def grab_links(base_url, delay, num_pages, procedure) -> None:
+def grab_links(base_url, num_pages, procedure) -> None:
     directory = (main.BASE_PATH / 'data') /  procedure
     directory.mkdir(parents=True, exist_ok=True)
     
@@ -21,7 +21,7 @@ def grab_links(base_url, delay, num_pages, procedure) -> None:
     thread_groups = []
     temp_group = []
 
-    for page_num in range(0, num_pages+1):
+    for page_num in range(0, num_pages+2):
         if not (((directory / "link_pages") / (str(page_num) + ".txt")).is_file()):
             link = base_url + str(page_num)
 
@@ -31,33 +31,18 @@ def grab_links(base_url, delay, num_pages, procedure) -> None:
                 thread_groups.append(temp_group)
                 temp_group = []
                 temp_group.append([link, page_num, procedure])
+    if len(temp_group) != 0:
+        thread_groups.append(temp_group)
 
     for group in thread_groups:
         start = time.time()
-        pool = ThreadPool(HTML_THREAD_COUNT)
+        pool = ThreadPool(len(group))
         pool.map(grab_link, group)
 
 
-        while(time.time() < start + delay):
+        while(time.time() < start + 5):
             pass
         
-
-    
-    
-##    for page in range(page_num,num_pages+1):
-##        start = time.time()
-##        
-##        parser.set_url(base_url + str(page))
-##        parser.get_data()
-##        links = parser.get_links()
-##        update_links(links, procedure)
-##        
-##        page_num_file = open("data/" + procedure + "/link_page_num.txt", "w")
-##        page_num_file.write(str(page))
-##        page_num_file.close()
-##        
-##        while(time.time() < start + delay):
-##            pass
 
 def grab_link(args: []):
     link = args[0]

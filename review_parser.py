@@ -5,6 +5,7 @@ from review import Comment
 
 class ReviewParser(HTMLParser):
     review_str = "CroppedText CroppedText--phone CroppedText--4 BodyText BodyText--large"
+    main_title_str = "Headline Headline--hero u-semiBold u-textPoppins"
     title_str = "Content-title Headline Headline--legacy Headline--legacy3 Headline--5"
     currency_tag = "rs-currency"
     comment_str = "List Content-byline Byline Byline--bulleted"
@@ -12,6 +13,10 @@ class ReviewParser(HTMLParser):
     provider_title = "Headline Headline--3 u-marginExtraSmall"
     provider_date = "Content-byline Byline"
     provider_text = "BodyText BodyText--large user-generated-content"
+    name_str = "Link Link--legacySecondary Link--primary"
+    pic_str = "!loading"
+    helpful_str = "people found this helpful"
+    
 
     def __init__(self):
         super(ReviewParser, self).__init__()
@@ -49,8 +54,15 @@ class ReviewParser(HTMLParser):
             pass
         else:
             self.last = ""
-        if (tag == "div"):
-            if (len(attrs) >= 1) and (attrs[0][0] == "class"):
+            
+        if (tag == "h1") and (len(attrs) >= 1) and (attrs[0][0] == "class"):
+            if attrs[0][1] == self.main_title_str:
+                self.last = self.main_title_str
+        if (tag == "a") and (len(attrs) >= 3) and (attrs[2][0] == "class") and (attrs[2][1] == self.name_str):
+            self.last = self.name_str
+        elif (tag == "div") and (len(attrs) > 2) and (attrs[0][1] == self.pic_str) and ("lazyload" in attrs[1][1]):
+            self.output.pic_count += 1
+        elif (tag == "div") and (len(attrs) >= 1) and (attrs[0][0] == "class"):
                 if attrs[0][1] == self.review_str:
                     self.last = self.review_str
         elif (tag == self.currency_tag):
@@ -81,16 +93,29 @@ class ReviewParser(HTMLParser):
         elif (tag == "p") and (len(attrs) == 1) and (attrs[0][0] == "class"):
             if (attrs[0][1] == self.provider_text):
                 self.last = self.provider_text
+
+        elif ((tag == "span") and (len(attrs) == 1) and (attrs[0][1] == "likeCount")):
+            self.last = self.helpful_str
+        
         
 
 
     def handle_data(self, data) -> None:
         data = data.strip()
-        
-        if self.last == self.title_str:
+
+        if self.last == self.main_title_str:
+            data = data.replace("\n", " ")
+            self.output.set_title(data)
+            
+            self.last = ""
+        elif self.last == self.name_str:
+            self.output.set_name(data)
+            self.last = ""
+        elif self.last == self.title_str:
             if (self.temp_comment.get_date() != ""):
                 self.output.add_comment(self.temp_comment)
             self.temp_comment = Comment()
+            data = data.replace("\n", " ")
             self.temp_comment.set_title(data)
             self.last = ""
         elif (self.last == self.date_str) or (self.last == self.provider_date):
@@ -98,14 +123,17 @@ class ReviewParser(HTMLParser):
             self.last = ""
         elif (self.last == self.review_str) or (self.last == self.provider_text):
             if data != "":
-                self.temp_comment.set_text(data + "\n")
-                
+                self.temp_comment.add_text(data + "\n")
         elif (data == "Worth It"):
             self.output.set_rating(data)
         elif (data == "Not Sure"):
             self.output.set_rating(data)
         elif (data == "Not Worth It"):
             self.output.set_rating(data)
+        elif (self.last == self.helpful_str):
+            self.output.help_count += int(data)
+            self.last = ""
+        
 
     def get_review(self) -> Review:
         return self.output

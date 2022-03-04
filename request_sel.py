@@ -29,34 +29,36 @@ class Request():
             unique_id = self.url[self.url.find("realself.com/") + 13:]
 
         proxy = proxies[Request.current_proxy]
-##        try:
-        driver = proxy_chrome(proxy[0], int(proxy[1]), proxy[2], proxy[3], unique_id)
-        driver.set_page_load_timeout(60)
-    
-        driver.get(self.url)
-        text = driver.page_source
-        if "px-captcha" in text:
-            element = driver.find_element_by_css_selector('#px-captcha')
-            action = ActionChains(driver)
-            click = ActionChains(driver)
-            action.click_and_hold(element)
-            action.perform()
-            time.sleep(10)
-            print(" hi ")
-            action.release(element)
-            action.perform()
-            time.sleep(0.2)
-            action.release(element)
-        print("Accessing: " + self.url + "\nUsing: " + proxy[0])
-        driver.quit()
         
-##        except:
-##            print("WHOOPS")
-##            try:
-##                driver.quit()
-##            except:
-##                pass
-##            text = ""
+        try:
+            driver = proxy_chrome(proxy[0], int(proxy[1]), proxy[2], proxy[3], unique_id)
+            driver.set_page_load_timeout(60)
+        
+            driver.get(self.url)
+            text = driver.page_source
+            if "px-captcha" in text:
+                element = driver.find_element_by_css_selector('#px-captcha')
+                action = ActionChains(driver)
+                click = ActionChains(driver)
+                action.click_and_hold(element)
+                action.perform()
+                time.sleep(10)
+                print(" captcha ")
+                action.release(element)
+                action.perform()
+                time.sleep(0.2)
+                action.release(element)
+            print("Accessing: " + self.url + "\nUsing: " + proxy[0])
+            driver.quit()
+        
+        except:
+            # If there are connection failures or problems
+            # with specific links, skip them.
+            try:
+                driver.quit()
+            except:
+                pass
+            text = ""
             
         if "Cosmetic Procedure Reviews" in text:
             text = ""

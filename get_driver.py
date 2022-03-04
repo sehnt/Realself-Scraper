@@ -1,9 +1,12 @@
+# Taken from https://gist.github.com/rajat-np/5d901702a33e7b4b5132b1acee5d778e
+# Modified a bit to fit the use case
+
 from selenium import webdriver
 from selenium.webdriver.common.proxy import Proxy
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
-import zipfile,os
+import zipfile
 import main
 
 def proxy_chrome(PROXY_HOST,PROXY_PORT,PROXY_USER,PROXY_PASS,unique_id="default"):
@@ -64,6 +67,8 @@ def proxy_chrome(PROXY_HOST,PROXY_PORT,PROXY_USER,PROXY_PASS,unique_id="default"
             "pass": PROXY_PASS,
         }
 
+    extension_path = main.BASE_PATH / "extension"
+    extension_path.mkdir(parents=True, exist_ok=True)
     pluginfile = (main.BASE_PATH / "extension") / (str(hash(unique_id)) + '.zip')
 
     with zipfile.ZipFile(pluginfile, 'w') as zp:
@@ -82,7 +87,7 @@ def proxy_chrome(PROXY_HOST,PROXY_PORT,PROXY_USER,PROXY_PASS,unique_id="default"
     chromedriver = (main.BASE_PATH / "chromedriver") / "chromedriver.exe"
     
     co.add_extension(pluginfile)
-    #driver = webdriver.Chrome(chromedriver, chrome_options=co)
     driver = webdriver.Remote(command_executor='http://localhost:4444/wd/hub',desired_capabilities=co.to_capabilities())
+
     #return the driver with added proxy configuration.
     return driver
